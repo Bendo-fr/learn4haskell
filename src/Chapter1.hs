@@ -209,11 +209,11 @@ So, the output in this example means that 'False' has type 'Bool'.
 > Try to guess first and then compare your expectations with GHCi output
 
 >>> :t True
-Bool
+True :: Bool
 >>> :t 'a'
-Char
+'a' :: Char
 >>> :t 42
-Int {Num p => p}
+42 :: Num p => p
 
 A pair of boolean and char:
 >>> :t (True, 'x')
