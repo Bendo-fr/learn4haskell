@@ -39,6 +39,7 @@ Now, if you are ready, bring it on!
 -}
 
 module Chapter2 where
+import Data.List ()
 
 {-
 =🛡= Imports
@@ -334,9 +335,13 @@ Don't forget that you can load this module in GHCi to call functions
 from it!
 
 ghci> :l src/Chapter2.hs
+
+Harder than task 4 -> strange go look at Data.List again
 -}
 subList :: Int -> Int -> [a] -> [a]
-subList = error "subList: Not implemented!"
+subList x y z
+  | x > y || y < 0 = []
+  | otherwise = drop x (take (y + 1) z) 
 
 {- |
 =⚔️= Task 4
@@ -349,7 +354,8 @@ Implement a function that returns only the first half of a given list.
 "b"
 -}
 -- PUT THE FUNCTION TYPE IN HERE
-firstHalf l = error "firstHalf: Not implemented!"
+firstHalf :: [a] -> [a]
+firstHalf l = take (div (length l) 2) l
 
 
 {- |
@@ -500,7 +506,9 @@ True
 >>> isThird42 [42, 42, 0, 42]
 False
 -}
-isThird42 = error "isThird42: Not implemented!"
+isThird42 :: [Int] -> Bool
+isThird42 (_:_:42:_) = True
+isThird42 _ = False
 
 
 {- |
@@ -605,7 +613,8 @@ Implement a function that duplicates each element of the list
 
 -}
 duplicate :: [a] -> [a]
-duplicate = error "duplicate: Not implemented!"
+duplicate [] = []
+duplicate (x:xs) = x : x : duplicate xs
 
 
 {- |
@@ -620,7 +629,10 @@ Write a function that takes elements of a list only on even positions.
 >>> takeEven [2, 1, 3, 5, 4]
 [2,3,4]
 -}
-takeEven = error "takeEven: Not implemented!"
+takeEven :: Integral a => [a] -> [a]
+takeEven [] =[]
+takeEven (x:[]) = [x]
+takeEven (x:_:xs) = x : takeEven xs 
 
 {- |
 =🛡= Higher-order functions
@@ -656,6 +668,7 @@ number 3 to each element of the list by introducing a lambda function:
 
 >>> map (\x -> x + 3) [0..5]
 [3,4,5,6,7,8]
+
 
 The syntax of the lambda functions is somewhat similar to normal ones,
 except for you don't need to think about its name, which is
@@ -726,8 +739,10 @@ value of the element itself
 
 🕯 HINT: Use combination of 'map' and 'replicate'
 -}
+
 smartReplicate :: [Int] -> [Int]
-smartReplicate l = error "smartReplicate: Not implemented!"
+smartReplicate  [] = []
+smartReplicate (x:xs) = (replicate x x) ++ smartReplicate xs
 
 {- |
 =⚔️= Task 9
@@ -740,7 +755,12 @@ the list with only those lists that contain a passed element.
 
 🕯 HINT: Use the 'elem' function to check whether an element belongs to a list
 -}
-contains = error "contains: Not implemented!"
+contains :: Int -> [[Int]] -> [[Int]]
+contains _ [] = []
+contains e (l:ls)
+  | elem e l = l : contains e ls
+  | otherwise = contains e ls
+
 
 
 {- |
@@ -780,13 +800,15 @@ Let's now try to eta-reduce some of the functions and ensure that we
 mastered the skill of eta-reducing.
 -}
 divideTenBy :: Int -> Int
-divideTenBy x = div 10 x
+divideTenBy = div 10
 
 -- TODO: type ;)
-listElementsLessThan x l = filter (< x) l
+listElementsLessThan :: Ord a => a -> [a] -> [a]
+listElementsLessThan x = filter (< x)
 
 -- Can you eta-reduce this one???
-pairMul xs ys = zipWith (*) xs ys
+pairMul :: [Integer] -> [Integer] -> [Integer]
+pairMul= zipWith (*)
 
 {- |
 =🛡= Lazy evaluation
@@ -841,7 +863,8 @@ list.
 
 🕯 HINT: Use the 'cycle' function
 -}
-rotate = error "rotate: Not implemented!"
+rotate :: Int -> [a] -> [a]
+rotate x l = drop x (take ((length l) + x) (cycle l))
 
 {- |
 =💣= Task 12*
@@ -857,7 +880,9 @@ and reverses it.
   function, but in this task, you need to implement it manually. No
   cheating!
 -}
-rewind = error "rewind: Not Implemented!"
+rewind :: [a] -> [a]
+rewind [] = []
+rewind (x:xs) = (rewind xs) ++ [x]
 
 
 {-
