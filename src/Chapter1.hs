@@ -583,7 +583,6 @@ isVowel c
   | otherwise = False
 
 
-
 {- |
 ___________________________________________________________
 == Local variables and functions
