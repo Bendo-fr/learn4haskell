@@ -310,12 +310,19 @@ setKnightName newName (MkKnight _ victories) =
   "deriving (Show)" line (will be explained later in this chapter) at the end of a
   record. Like so:
 
-@
 data Knight = MkKnight
     { knightName      :: String
     , knightVictories :: Int
     } deriving (Show)
-@
+
+setKnightVictories :: Knight -> Int -> Knight
+setKnightVictories (MkKnight name _) newVic = MkKnight name newVic
+
+@-}
+
+
+
+{- @
 
 Now GHCi should be able to show the values of your types! Try playing with our
 knights in GHCi to get the idea behind records.
@@ -343,6 +350,14 @@ Define the Book product data type. You can take inspiration from our description
 of a book, but you are not limited only by the book properties we described.
 Create your own book type of your dreams!
 -}
+
+data Book = MkBook
+  { bookName :: String
+  , bookAuthor :: String
+  , price :: Float
+  , isbn :: String
+  , numberOfPages :: Int
+  } deriving (Show)
 
 {- |
 =⚔️= Task 2
@@ -372,7 +387,34 @@ after the fight. The battle has the following possible outcomes:
  ⊛ Neither the knight nor the monster wins. On such an occasion, the knight
    doesn't earn any money and keeps what they had before.
 
+data Character = MkCharacter
+  { health :: Int
+  , attack :: Int
+  , gold :: Int
+  } 
+
+data Monster = MkMonster Character
+data Knight = MkKnight Character
 -}
+
+data Monster = MkMonster
+  { mHealth :: Int
+  , mAttack :: Int
+  , mGold :: Int
+  }
+
+data Knight = MkKnight
+  { kHealth :: Int
+  , kAttack :: Int
+  , kGold :: Int
+  }
+
+fight :: Knight -> Monster -> Int
+fight k m
+  | mHealth m - (kAttack k) <= 0 = mGold m
+  | kHealth k - (mAttack m) <= 0 = -1
+  | otherwise = 0
+
 
 {- |
 =🛡= Sum types
@@ -460,6 +502,17 @@ Create a simple enumeration for the meal types (e.g. breakfast). The one who
 comes up with the most number of names wins the challenge. Use your creativity!
 -}
 
+data Meal
+    = Breakfast
+    | SecondBreakfast
+    | Elevensies
+    | Luncheon
+    | AfternoonTea
+    | Diner
+    | Supper
+    | MidnightSnack
+
+
 {- |
 =⚔️= Task 4
 
@@ -479,6 +532,26 @@ After defining the city, implement the following functions:
    complicated task, walls can be built only if the city has a castle
    and at least 10 living __people__ inside in all houses of the city totally.
 -}
+
+data Building
+  = Church
+  | Library
+
+data House
+    = One
+    | Two
+    | Three
+    | Four
+
+
+data City
+  = City {building :: Building, houses :: [House]}
+  | WalledCity  {building :: Building, houses :: [House], castle :: String, walls :: Bool}
+
+buildCastle :: City -> String -> City
+buildCastle city castleName = case city of
+  City b h -> WalledCity b h castleName False
+  WalledCity b h _ w -> WalledCity b h castleName w 
 
 {-
 =🛡= Newtypes
@@ -560,37 +633,7 @@ introducing extra newtypes.
 🕯 HINT: if you complete this task properly, you don't need to change the
     implementation of the "hitPlayer" function at all!
 -}
-data Player = Player
-    { playerHealth    :: Int
-    , playerArmor     :: Int
-    , playerAttack    :: Int
-    , playerDexterity :: Int
-    , playerStrength  :: Int
-    }
 
-calculatePlayerDamage :: Int -> Int -> Int
-calculatePlayerDamage attack strength = attack + strength
-
-calculatePlayerDefense :: Int -> Int -> Int
-calculatePlayerDefense armor dexterity = armor * dexterity
-
-calculatePlayerHit :: Int -> Int -> Int -> Int
-calculatePlayerHit damage defense health = health + defense - damage
-
--- The second player hits first player and the new first player is returned
-hitPlayer :: Player -> Player -> Player
-hitPlayer player1 player2 =
-    let damage = calculatePlayerDamage
-            (playerAttack player2)
-            (playerStrength player2)
-        defense = calculatePlayerDefense
-            (playerArmor player1)
-            (playerDexterity player1)
-        newHealth = calculatePlayerHit
-            damage
-            defense
-            (playerHealth player1)
-    in player1 { playerHealth = newHealth }
 
 {- |
 =🛡= Polymorphic data types
@@ -970,6 +1013,21 @@ implement the following functions:
 
 🕯 HINT: to implement this task, derive some standard typeclasses
 -}
+
+data Day
+    = Lundi
+    | Mardi
+    | Mercredi
+    | Jeudi
+    | Vendredi
+    | Samedi
+    | Dimanche
+    deriving (Eq, Show)
+
+isWeekend :: Day -> Bool
+isWeekend d = if d == Samedi || d == Dimanche
+              then True
+              else False 
 
 {-
 =💣= Task 9*

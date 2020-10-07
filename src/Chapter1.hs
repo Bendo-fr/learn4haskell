@@ -269,11 +269,13 @@ form (operator goes __after__ the first argument), while ordinary functions are
 what-called __prefix__ form (the name goes first, before all arguments).
 
 ghci> :t add
-Add :: Int -> Int -> Int
+add :: Int -> Int -> Int
 ghci> :t (+)
-(+) :: Int -> Int -> Int
+(+) :: Num a => a -> a -> a
+
 ghci> add 1 2
 3
+
 ghci> 1 + 2
 3
 
@@ -676,19 +678,13 @@ You need to use recursion in this task. Feel free to return to it later, if you
 aren't ready for this boss yet!
 -}
 
-firstDigit :: Integral t => t -> t
+firstDigit :: Int -> Int
 firstDigit n
-  | n < 10 = n
-  | otherwise = firstDigit remainingDigit
-  where
-    remainingDigit = div n 10
+  | n > 10 = firstDigit (div n 10)
+  | otherwise = n
 
-firstDigitIF :: Int -> Int
-firstDigitIF n = if n < 10
-                  then n
-                  else firstDigit remainingDigit
-  where
-    remainingDigit = div n 10
+firstDigit2 :: Int -> Int
+firstDigit2 n = mod (read(reverse (show n))) 10
 
 {-
 You did it! Now it is time to the open pull request with your changes
