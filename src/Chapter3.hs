@@ -159,6 +159,7 @@ BookShelf:
   Types.
 -}
 
+
 {- |
 =🛡= Product type
 
@@ -387,15 +388,10 @@ after the fight. The battle has the following possible outcomes:
  ⊛ Neither the knight nor the monster wins. On such an occasion, the knight
    doesn't earn any money and keeps what they had before.
 
-data Character = MkCharacter
-  { health :: Int
-  , attack :: Int
-  , gold :: Int
-  } 
-
-data Monster = MkMonster Character
-data Knight = MkKnight Character
 -}
+
+
+
 
 data Monster = MkMonster
   { mHealth :: Int
@@ -411,9 +407,10 @@ data Knight = MkKnight
 
 fight :: Knight -> Monster -> Int
 fight k m
-  | mHealth m - (kAttack k) <= 0 = mGold m
-  | kHealth k - (mAttack m) <= 0 = -1
-  | otherwise = 0
+  | mHealth m - kAttack k <= 0 = kGold k + mGold m
+  | kHealth k - mAttack m <= 0 = -1
+  | otherwise = kGold k
+
 
 
 {- |
@@ -537,21 +534,40 @@ data Building
   = Church
   | Library
 
-data House
-    = One
-    | Two
-    | Three
-    | Four
-
-
 data City
-  = City {building :: Building, houses :: [House]}
-  | WalledCity  {building :: Building, houses :: [House], castle :: String, walls :: Bool}
+  = City {building :: Building, houses :: [Int]}
+  | FortifiedCity  {building :: Building, houses :: [Int], castle :: String, walls :: Bool}
 
 buildCastle :: City -> String -> City
 buildCastle city castleName = case city of
-  City b h -> WalledCity b h castleName False
-  WalledCity b h _ w -> WalledCity b h castleName w 
+  City b h -> FortifiedCity b h castleName False
+  FortifiedCity b h _ w -> FortifiedCity b h castleName w 
+
+buildHouse :: City -> Int -> City
+buildHouse ct house
+  | house > 4 || house < 0 = ct
+  | otherwise = case ct of
+      City b h -> City b (house : filter (> 0) (filter (<4) h))
+      FortifiedCity b h c w -> FortifiedCity b (house : h) c w
+
+buildWalls :: City -> City
+buildWalls ct = case ct of
+  City _ _ -> ct
+  FortifiedCity b h c w -> if w
+                           then ct
+                           else if sum h > 10
+                                then FortifiedCity b h c True
+                                else ct
+
+buildWalls2 :: City -> City
+buildWalls2 ct = case ct of
+  City _ _ -> ct -- City as no castle, output city as is
+  FortifiedCity _ h _ w -> let
+    -- If city already as  walls, output city as is else construct walls only if sum of habitants is more than 10 --
+    newWalls = if w
+      then w
+      else sum h > 10 
+    in ct {walls = newWalls}
 
 {-
 =🛡= Newtypes
@@ -634,6 +650,47 @@ introducing extra newtypes.
     implementation of the "hitPlayer" function at all!
 -}
 
+newtype Health = Health {healthVal :: Int}
+newtype Armor = Armor {armorVal :: Int}
+newtype Attack = Attack {attackVal :: Int}
+newtype Dexterity = Dexterity {dexVal :: Int}
+newtype Strength = Strength {strVal :: Int}
+
+newtype Damage = Damage {dmgVal :: Int}
+newtype Defense = Defense {defVal :: Int}
+
+
+data Player = Player
+    { playerHealth    :: Health
+    , playerArmor     :: Armor
+    , playerAttack    :: Attack
+    , playerDexterity :: Dexterity
+    , playerStrength  :: Strength
+    }
+
+calculatePlayerDamage :: Attack -> Strength -> Damage
+calculatePlayerDamage attack strength = Damage (attackVal attack + strVal strength)
+
+calculatePlayerDefense :: Armor -> Dexterity -> Defense
+calculatePlayerDefense armor dexterity = Defense (armorVal armor * dexVal dexterity)
+
+calculatePlayerHit :: Damage -> Defense -> Health -> Health
+calculatePlayerHit damage defense health = Health (healthVal health + defVal defense - dmgVal damage)
+
+-- The second player hits first player and the new first player is returned
+hitPlayer :: Player -> Player -> Player
+hitPlayer player1 player2 =
+    let damage = calculatePlayerDamage
+            (playerAttack player2)
+            (playerStrength player2)
+        defense = calculatePlayerDefense
+            (playerArmor player1)
+            (playerDexterity player1)
+        newHealth = calculatePlayerHit
+            damage
+            defense
+            (playerHealth player1)
+    in player1 { playerHealth = newHealth }
 
 {- |
 =🛡= Polymorphic data types
@@ -796,6 +853,26 @@ parametrise data types in places where values can be of any general type.
   maybe-treasure ;)
 -}
 
+data Dragon power = MkDragon
+  { name :: String
+  , magicalPower :: power
+  , grumpiness :: Int
+  , hungryness :: Int
+  , greediness :: Int
+  }
+
+data TreasureChest x = TreasureChest
+    { treasureChestGold :: Int
+    , treasureChestLoot :: x
+    }
+
+
+data DragonLair treasure power = MkDragonLair
+  { lairName :: String
+  , dragonOverlord :: Dragon power
+  , treasure :: Maybe (TreasureChest treasure)
+  }
+
 {-
 =🛡= Typeclasses
 
@@ -953,6 +1030,24 @@ Implement instances of "Append" for the following types:
 class Append a where
     append :: a -> a -> a
 
+newtype Gold = Gold Int
+
+instance Append Gold where
+  append :: Gold -> Gold -> Gold
+  append (Gold i) (Gold j) = Gold (i + j)
+
+instance Append [a] where
+  append :: [a] -> [a] -> [a]
+  append l m = l ++ m
+
+instance Append a => Append (Maybe a) where
+    append :: Maybe a -> Maybe a -> Maybe a
+    append Nothing mx = mx
+    append mx Nothing = mx
+    append (Just x) (Just y) = Just (append x y)
+    
+
+
 
 {-
 =🛡= Standard Typeclasses and Deriving
@@ -1022,12 +1117,26 @@ data Day
     | Vendredi
     | Samedi
     | Dimanche
-    deriving (Eq, Show)
+    deriving (Eq, Ord, Show, Enum)
 
 isWeekend :: Day -> Bool
-isWeekend d = if d == Samedi || d == Dimanche
-              then True
-              else False 
+isWeekend d = d >= Samedi
+
+nextDay :: Day -> Day
+nextDay d = case d of
+  Dimanche -> Lundi
+  _ -> succ d
+
+daysToParty :: Day -> Int
+daysToParty d = let
+                num = fromEnum Vendredi - fromEnum d
+                in if num < 0
+                  then num + 7
+                  else num
+
+daysToParty2 :: Day -> Int
+daysToParty2 wd = (fromEnum Vendredi - fromEnum wd) `mod` 7
+
 
 {-
 =💣= Task 9*
@@ -1063,6 +1172,47 @@ properties using typeclasses, but they are different data types in the end.
 Implement data types and typeclasses, describing such a battle between two
 contestants, and write a function that decides the outcome of a fight!
 -}
+
+{-
+Monster
+attack
+runaway
+
+Knight
+attack
+drink health potion
+cast spell
+-}
+
+data Mon = MkMon
+  { monAttack :: Int
+  , monHealth :: Int
+  }
+
+data Kni = MkKni
+  { kniAttack :: Int
+  , kniHealth :: Int
+  , kniDefense :: Int
+  }
+
+class Character a where
+  isDead :: a -> Bool
+  attack :: a -> a -> a
+
+instance Character Kni where
+  isDead :: Kni -> Bool
+  isDead k = kniHealth k <= 0
+
+instance Character Mon where
+  isDead :: Mon -> Bool
+  isDead m = monHealth m <= 0
+  attack :: a -> a -> a
+  attack a _ = a
+
+
+--affrontement :: Character a => a -> a -> String
+
+
 
 
 {-

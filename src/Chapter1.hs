@@ -492,7 +492,7 @@ Implement a function that returns the last digit of a given number.
 -}
 -- DON'T FORGET TO SPECIFY THE TYPE IN HERE
 lastDigit :: Int -> Int
-lastDigit n = mod n 10
+lastDigit n = mod (abs n) 10
 
 
 {- |
@@ -522,7 +522,9 @@ branches because it is an expression and it must always return some value.
   satisfying the check will be returned and, therefore, evaluated.
 -}
 closestToZero :: Int -> Int -> Int
-closestToZero x y = min (abs x) (abs y)
+closestToZero x y =
+  | abs x < abs y = x
+  | otherwise = y
 
 
 {- |
@@ -583,6 +585,10 @@ isVowel c
   | c == 'u' || c == 'U' = True
   | c == 'y' || c == 'Y' = True
   | otherwise = False
+
+isVowel2 :: Char -> Bool
+isVowel2 c = c `elem` "AEIOUYaeiouy"
+
 
 
 {- |
@@ -649,14 +655,14 @@ specifying complex expressions.
 
 sumLast2 :: Int -> Int
 sumLast2 n = let a = mod n 10
-                 b = div ((mod n 100) - a) 10
+                 b = div (mod n 100 - a) 10
               in a + b
 
 sumLast2w:: Int -> Int
 sumLast2w n = a + b
         where
           a = mod n 10
-          b = div ((mod n 100) - a) 10
+          b = div (mod n 100 - a) 10
     
 
 
@@ -680,8 +686,10 @@ aren't ready for this boss yet!
 
 firstDigit :: Int -> Int
 firstDigit n
-  | n > 10 = firstDigit (div n 10)
-  | otherwise = n
+  | posN > 10 = firstDigit (div posN 10)
+  | otherwise = posN
+  where
+    posN = abs n
 
 firstDigit2 :: Int -> Int
 firstDigit2 n = mod (read(reverse (show n))) 10

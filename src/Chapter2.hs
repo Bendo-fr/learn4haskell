@@ -137,42 +137,52 @@ functions in GHCi and insert the corresponding resulting output below:
 
 List of booleans:
 >>> :t [True, False]
+[True, False] :: [Bool]
 
 
 String is a list of characters:
 >>> :t "some string"
+"some string" :: [Char]
 
 
 Empty list:
->>> :t []
+>>> :t []:t []
+[] :: [a]
 
 
 Append two lists:
 >>> :t (++)
+(++) :: [a] -> [a] -> [a]
 
 
 Prepend an element at the beginning of a list:
 >>> :t (:)
+(:) :: a -> [a] -> [a]
 
 
 Reverse a list:
 >>> :t reverse
+reverse :: [a] -> [a]
 
 
 Take first N elements of a list:
 >>> :t take
+take :: Int -> [a] -> [a]
 
 
 Create list from N same elements:
 >>> :t replicate
+replicate :: Int -> a -> [a]
 
 
 Split a string by line breaks:
 >>> :t lines
+lines :: String -> [String]
 
 
 Join a list of strings with line breaks:
 >>> :t unlines
+unlines :: [String] -> String
 
 
 -}
@@ -187,31 +197,43 @@ Evaluate the following expressions in GHCi and insert the answers. Try
 to guess first, what you will see.
 
 >>> [10, 2] ++ [3, 1, 5]
+[10,2,3,1,5]
 
 >>> [] ++ [1, 4]  -- [] is an empty list
+[1,4]
 
 >>> 3 : [1, 2]
+[3,1,2]
 
 >>> 4 : 2 : [5, 10]  -- prepend multiple elements
+[4,2,5,10]
 
 >>> [1 .. 10]  -- list ranges
+[1,2,3,4,5,6,7,8,9,10]
 
 >>> [10 .. 1]
+[]
 
 >>> [10, 9 .. 1]  -- backwards list with explicit step
+[10,9,8,7,6,5,4,3,2,1]
 
 >>> length [4, 10, 5]  -- list length
+3
 
 >>> replicate 5 True
+[True,True,True,True,True]
 
 >>> take 5 "Hello, World!"
+"Hello"
 
 >>> drop 5 "Hello, World!"
+", World!"
 
 >>> zip "abc" [1, 2, 3]  -- convert two lists to a single list of pairs
+[('a',1),('b',2),('c',3)]
 
 >>> words "Hello   Haskell     World!"  -- split the string into the list of words
-
+["Hello","Haskell","World!"]
 
 
 👩‍🔬 Haskell has a lot of syntax sugar. In the case with lists, any
@@ -335,8 +357,6 @@ Don't forget that you can load this module in GHCi to call functions
 from it!
 
 ghci> :l src/Chapter2.hs
-
-Harder than task 4 -> strange go look at Data.List again
 -}
 subList :: Int -> Int -> [a] -> [a]
 subList x y z
@@ -629,10 +649,19 @@ Write a function that takes elements of a list only on even positions.
 >>> takeEven [2, 1, 3, 5, 4]
 [2,3,4]
 -}
-takeEven :: Integral a => [a] -> [a]
+takeEven :: [a] -> [a]
 takeEven [] =[]
-takeEven (x:[]) = [x]
-takeEven (x:_:xs) = x : takeEven xs 
+takeEven [x] = [x]
+takeEven (x:_:xs) = x : takeEven xs
+
+takeEven2 :: [a] -> [a]
+takeEven2 l = go l []
+  where
+    go :: [a] -> [a] -> [a]
+    go [] y = y
+    go [x] y = y ++ [x]
+    go (x:_:xs) y = go xs (y ++ [x])
+
 
 {- |
 =🛡= Higher-order functions
@@ -742,7 +771,16 @@ value of the element itself
 
 smartReplicate :: [Int] -> [Int]
 smartReplicate  [] = []
-smartReplicate (x:xs) = (replicate x x) ++ smartReplicate xs
+smartReplicate (x:xs) = replicate x x ++ smartReplicate xs
+
+--HLinter told me to do this --
+smartReplicate2 :: [Int] -> [Int]
+smartReplicate2 [] = []
+smartReplicate2 l = foldr (\x -> (++) (replicate x x)) [] l
+
+-- Solution from GitHub --
+smartReplicateSoluce :: [Int] -> [Int]
+smartReplicateSoluce = concatMap (\x -> replicate x x)
 
 {- |
 =⚔️= Task 9
@@ -758,10 +796,12 @@ the list with only those lists that contain a passed element.
 contains :: Int -> [[Int]] -> [[Int]]
 contains _ [] = []
 contains e (l:ls)
-  | elem e l = l : contains e ls
+  | e `elem` l = l : contains e ls
   | otherwise = contains e ls
 
-
+-- Solution form GitHub --
+containsSolution :: Int -> [[Int]] -> [[Int]]
+containsSolution x = filter (elem x)
 
 {- |
 =🛡= Eta-reduction
@@ -864,7 +904,10 @@ list.
 🕯 HINT: Use the 'cycle' function
 -}
 rotate :: Int -> [a] -> [a]
-rotate x l = drop x (take ((length l) + x) (cycle l))
+rotate _ [] = []
+rotate x l
+  | x < 0 = []
+  |otherwise = drop x (take (length l + x) (cycle l))
 
 {- |
 =💣= Task 12*
@@ -882,7 +925,14 @@ and reverses it.
 -}
 rewind :: [a] -> [a]
 rewind [] = []
-rewind (x:xs) = (rewind xs) ++ [x]
+rewind (x:xs) = rewind xs ++ [x]
+
+rewind2 :: [a] -> [a]
+rewind2 l = go l []
+  where
+    go :: [a] -> [a] -> [a]
+    go [] y = y
+    go (x:xs) y = go xs (x : y)
 
 
 {-
